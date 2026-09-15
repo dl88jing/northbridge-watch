@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Northbridge Watch — API Gateway + Lambda + S3 + SNS (OpenCV AI Competition 2026)
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: northbridge-watch
+
+Resources:
+  EventsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-events-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  NotifyTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ProjectName}-alerts'
+      DisplayName: Northbridge Watch Alerts
+
+  WatchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-ingest'
+      Runtime: python3.12
+      Architectures:
+        - arm64
+      Handler: handler.lambda_handler
+      CodeUri: ../northbridge_watch/aws/
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          NW_S3_BUCKET: !Ref EventsBucket
+          NW_SNS_TOPIC_ARN: !Ref NotifyTopic
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref EventsBucket
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt NotifyTopic.TopicName
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /ingest
+            Method: post
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+  BucketName:
+    Value: !Ref EventsBucket
+  TopicArn:
+    Value: !Ref NotifyTopic

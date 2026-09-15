@@ -1,0 +1,402 @@
+[
+  {
+    "id": "calm_porch",
+    "title": "Calm porch",
+    "description": "Empty Northbridge porch \u2014 no action expected.",
+    "expected_label": "none",
+    "image": "/demo/calm_porch.jpg",
+    "annotated": "/demo/calm_porch_annotated.jpg",
+    "trace": {
+      "trace_id": "8a65095553bca49e",
+      "timestamp": "2026-09-15T04:49:03.966793+00:00",
+      "source": "fixture",
+      "perception": {
+        "scene_hint": "calm",
+        "opencv_version": "5.0.0",
+        "detections": [],
+        "metrics": {
+          "signal": 0.0,
+          "porch_like": true,
+          "floor_like": false,
+          "fridge_like": false,
+          "border_mean": 188.0,
+          "center_mean": 141.9,
+          "grid_score": 0.032
+        },
+        "primary": null
+      },
+      "decision": {
+        "action": "noop",
+        "reason": "No anomaly detected \u2014 porch/kitchen calm.",
+        "severity": 0.0,
+        "notify_targets": [],
+        "speakable_brief": "All quiet at Northbridge.",
+        "requires_ack": false,
+        "policy_version": "northbridge-watch-policy-v1"
+      },
+      "actions_taken": [
+        {
+          "type": "noop",
+          "detail": "No cloud write."
+        }
+      ],
+      "annotated_path": "/workspace/northbridge-watch/fixtures/annotated/calm_porch_annotated.jpg"
+    }
+  },
+  {
+    "id": "package_at_door",
+    "title": "Package at door",
+    "description": "Single brown package on the porch mat.",
+    "expected_label": "package",
+    "image": "/demo/package_at_door.jpg",
+    "annotated": "/demo/package_at_door_annotated.jpg",
+    "trace": {
+      "trace_id": "1a2b0b135039584d",
+      "timestamp": "2026-09-15T04:49:03.973179+00:00",
+      "source": "fixture",
+      "perception": {
+        "scene_hint": "porch_package",
+        "opencv_version": "5.0.0",
+        "detections": [
+          {
+            "label": "package",
+            "confidence": 0.82,
+            "bbox": [
+              248,
+              328,
+              144,
+              94
+            ],
+            "area": 13070.0,
+            "notes": "approx_vertices=4 aspect=1.53"
+          }
+        ],
+        "metrics": {
+          "n_detections": 1,
+          "max_confidence": 0.82,
+          "opencv": "5.0.0",
+          "porch_like": true,
+          "floor_like": false,
+          "fridge_like": false,
+          "border_mean": 188.0,
+          "center_mean": 144.2,
+          "grid_score": 0.038
+        },
+        "primary": {
+          "label": "package",
+          "confidence": 0.82,
+          "bbox": [
+            248,
+            328,
+            144,
+            94
+          ],
+          "area": 13070.0,
+          "notes": "approx_vertices=4 aspect=1.53"
+        }
+      },
+      "decision": {
+        "action": "notify",
+        "reason": "Single package (conf=0.82).",
+        "severity": 0.574,
+        "notify_targets": [
+          "Avery"
+        ],
+        "speakable_brief": "A package arrived on the porch. I can mark it received.",
+        "requires_ack": true,
+        "policy_version": "northbridge-watch-policy-v1"
+      },
+      "actions_taken": [
+        {
+          "type": "persist_event",
+          "ref": "local://events.jsonl#73ce228a-5a32-4f3f-bb93-3ee5ee91e20a",
+          "backend": "local-jsonl"
+        },
+        {
+          "type": "notify",
+          "target": "Avery",
+          "channel": "sns_or_push_mock",
+          "message": "A package arrived on the porch. I can mark it received."
+        }
+      ],
+      "annotated_path": "/workspace/northbridge-watch/fixtures/annotated/package_at_door_annotated.jpg"
+    }
+  },
+  {
+    "id": "floor_spill",
+    "title": "Kitchen spill",
+    "description": "Irregular liquid spill on light tile.",
+    "expected_label": "spill",
+    "image": "/demo/floor_spill.jpg",
+    "annotated": "/demo/floor_spill_annotated.jpg",
+    "trace": {
+      "trace_id": "9531bf65efa130a1",
+      "timestamp": "2026-09-15T04:49:03.980454+00:00",
+      "source": "fixture",
+      "perception": {
+        "scene_hint": "floor_spill",
+        "opencv_version": "5.0.0",
+        "detections": [
+          {
+            "label": "spill",
+            "confidence": 0.681,
+            "bbox": [
+              160,
+              190,
+              200,
+              151
+            ],
+            "area": 19743.5,
+            "notes": "solidity=0.99"
+          }
+        ],
+        "metrics": {
+          "n_detections": 1,
+          "max_confidence": 0.681,
+          "opencv": "5.0.0",
+          "porch_like": false,
+          "floor_like": true,
+          "fridge_like": false,
+          "border_mean": 224.5,
+          "center_mean": 215.9,
+          "grid_score": 0.095
+        },
+        "primary": {
+          "label": "spill",
+          "confidence": 0.681,
+          "bbox": [
+            160,
+            190,
+            200,
+            151
+          ],
+          "area": 19743.5,
+          "notes": "solidity=0.99"
+        }
+      },
+      "decision": {
+        "action": "human_required",
+        "reason": "Spill detected (conf=0.68) \u2014 safety hazard.",
+        "severity": 0.8310000000000001,
+        "notify_targets": [
+          "Avery",
+          "Morgan"
+        ],
+        "speakable_brief": "Heads up \u2014 I see a spill on the kitchen floor. Want me to log a clean-up task?",
+        "requires_ack": true,
+        "policy_version": "northbridge-watch-policy-v1"
+      },
+      "actions_taken": [
+        {
+          "type": "persist_event",
+          "ref": "local://events.jsonl#c4eb485e-49b3-4219-9f44-67fdf3d51e0a",
+          "backend": "local-jsonl"
+        },
+        {
+          "type": "escalate",
+          "targets": [
+            "Avery",
+            "Morgan"
+          ],
+          "requires_ack": true,
+          "message": "Heads up \u2014 I see a spill on the kitchen floor. Want me to log a clean-up task?"
+        },
+        {
+          "type": "await_human",
+          "detail": "Paused further automation until ack."
+        }
+      ],
+      "annotated_path": "/workspace/northbridge-watch/fixtures/annotated/floor_spill_annotated.jpg"
+    }
+  },
+  {
+    "id": "empty_fridge",
+    "title": "Empty fridge shelf",
+    "description": "Mostly empty fridge interior \u2014 restock signal.",
+    "expected_label": "empty_fridge",
+    "image": "/demo/empty_fridge.jpg",
+    "annotated": "/demo/empty_fridge_annotated.jpg",
+    "trace": {
+      "trace_id": "0cd4d6a07d619790",
+      "timestamp": "2026-09-15T04:49:03.986682+00:00",
+      "source": "fixture",
+      "perception": {
+        "scene_hint": "empty_fridge",
+        "opencv_version": "5.0.0",
+        "detections": [
+          {
+            "label": "empty_fridge",
+            "confidence": 0.762,
+            "bbox": [
+              76,
+              72,
+              467,
+              336
+            ],
+            "area": 157248.0,
+            "notes": "mean_bright=236.3 edge_density=0.0194 shelf=0.037"
+          }
+        ],
+        "metrics": {
+          "n_detections": 1,
+          "max_confidence": 0.762,
+          "opencv": "5.0.0",
+          "porch_like": false,
+          "floor_like": false,
+          "fridge_like": true,
+          "border_mean": 24.5,
+          "center_mean": 236.2,
+          "grid_score": 0.04
+        },
+        "primary": {
+          "label": "empty_fridge",
+          "confidence": 0.762,
+          "bbox": [
+            76,
+            72,
+            467,
+            336
+          ],
+          "area": 157248.0,
+          "notes": "mean_bright=236.3 edge_density=0.0194 shelf=0.037"
+        }
+      },
+      "decision": {
+        "action": "notify",
+        "reason": "Empty fridge shelf (conf=0.76).",
+        "severity": 0.4572,
+        "notify_targets": [
+          "Morgan"
+        ],
+        "speakable_brief": "The fridge looks mostly empty. Shall I add milk and produce to the list?",
+        "requires_ack": true,
+        "policy_version": "northbridge-watch-policy-v1"
+      },
+      "actions_taken": [
+        {
+          "type": "persist_event",
+          "ref": "local://events.jsonl#71857c21-8390-4460-9388-309b8e697105",
+          "backend": "local-jsonl"
+        },
+        {
+          "type": "notify",
+          "target": "Morgan",
+          "channel": "sns_or_push_mock",
+          "message": "The fridge looks mostly empty. Shall I add milk and produce to the list?"
+        }
+      ],
+      "annotated_path": "/workspace/northbridge-watch/fixtures/annotated/empty_fridge_annotated.jpg"
+    }
+  },
+  {
+    "id": "busy_porch",
+    "title": "Busy porch (multi-package)",
+    "description": "Several packages blocking the door \u2014 notify Avery & Morgan.",
+    "expected_label": "package",
+    "image": "/demo/busy_porch.jpg",
+    "annotated": "/demo/busy_porch_annotated.jpg",
+    "trace": {
+      "trace_id": "80e8c293104f69fa",
+      "timestamp": "2026-09-15T04:49:03.992276+00:00",
+      "source": "fixture",
+      "perception": {
+        "scene_hint": "porch_package",
+        "opencv_version": "5.0.0",
+        "detections": [
+          {
+            "label": "package",
+            "confidence": 0.663,
+            "bbox": [
+              408,
+              354,
+              100,
+              68
+            ],
+            "area": 6502.0,
+            "notes": "approx_vertices=4 aspect=1.47|merged"
+          },
+          {
+            "label": "package",
+            "confidence": 0.643,
+            "bbox": [
+              148,
+              358,
+              94,
+              64
+            ],
+            "area": 5707.0,
+            "notes": "approx_vertices=4 aspect=1.47|merged"
+          },
+          {
+            "label": "package",
+            "confidence": 0.624,
+            "bbox": [
+              278,
+              284,
+              90,
+              58
+            ],
+            "area": 4964.0,
+            "notes": "approx_vertices=4 aspect=1.55|merged"
+          }
+        ],
+        "metrics": {
+          "n_detections": 3,
+          "max_confidence": 0.663,
+          "opencv": "5.0.0",
+          "porch_like": true,
+          "floor_like": false,
+          "fridge_like": false,
+          "border_mean": 188.0,
+          "center_mean": 140.0,
+          "grid_score": 0.047
+        },
+        "primary": {
+          "label": "package",
+          "confidence": 0.663,
+          "bbox": [
+            408,
+            354,
+            100,
+            68
+          ],
+          "area": 6502.0,
+          "notes": "approx_vertices=4 aspect=1.47|merged"
+        }
+      },
+      "decision": {
+        "action": "human_required",
+        "reason": "3 packages at door (conf=0.66) \u2014 doorway blocked.",
+        "severity": 1.0,
+        "notify_targets": [
+          "Avery",
+          "Morgan"
+        ],
+        "speakable_brief": "There are 3 packages by the door. Bring them in when you can?",
+        "requires_ack": true,
+        "policy_version": "northbridge-watch-policy-v1"
+      },
+      "actions_taken": [
+        {
+          "type": "persist_event",
+          "ref": "local://events.jsonl#ddeb14bd-bccc-40d8-b6df-b5012dd91b4f",
+          "backend": "local-jsonl"
+        },
+        {
+          "type": "escalate",
+          "targets": [
+            "Avery",
+            "Morgan"
+          ],
+          "requires_ack": true,
+          "message": "There are 3 packages by the door. Bring them in when you can?"
+        },
+        {
+          "type": "await_human",
+          "detail": "Paused further automation until ack."
+        }
+      ],
+      "annotated_path": "/workspace/northbridge-watch/fixtures/annotated/busy_porch_annotated.jpg"
+    }
+  }
+]
