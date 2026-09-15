@@ -18,3 +18,4 @@ web/.vercel
 fixtures/events/*.jsonl
 *.log
 .aws-sam/
+__pycache__/
