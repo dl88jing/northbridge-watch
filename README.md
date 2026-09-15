@@ -14,7 +14,7 @@
 
 ## Live demo
 
-**Judge UI (Vercel):** _deployed after push — see repo About / this README update_
+**Judge UI (Vercel):** [https://northbridge-watch.vercel.app](https://northbridge-watch.vercel.app)
 
 Static fixture traces ship in `web/public/demo/` so judges can explore without a GPU or webcam. Full OpenCV 5 loop: `./demo.sh`.
 
