@@ -1,0 +1,19 @@
+flowchart TB
+  subgraph Input
+    A[Camera frame / uploaded image<br/>or demo fixture]
+  end
+  subgraph Vercel["Vercel (live demo)"]
+    W[React UI<br/>web/] -->|POST /api/analyze| F[Python function<br/>api/index.py · FastAPI]
+  end
+  subgraph Core["northbridge_watch (OpenCV 5.0.0)"]
+    D[AnomalyDetector<br/>resize 640x480 · HSV masks · morphology<br/>contours · Canny/Sobel · convex hull]
+    P[PolicyEngine<br/>noop / auto_log / notify / human_required<br/>quiet hours]
+    O[AgentOrchestrator<br/>trace + event]
+    D --> P --> O
+  end
+  A --> W
+  F --> D
+  O --> L[(LocalEventStore<br/>JSONL)]
+  O -.->|optional NW_AWS_INGEST_URL<br/>not deployed yet| G[AWS API Gateway /ingest]
+  G -.-> LM[Lambda arm64] -.-> S3[(S3 events)]
+  LM -.-> SNS[SNS alert to Avery & Morgan]

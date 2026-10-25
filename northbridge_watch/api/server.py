@@ -137,7 +137,7 @@ def analyze(body: AnalyzeBody) -> dict[str, Any]:
             raise HTTPException(400, "Could not decode image")
         if max(bgr.shape[:2]) > MAX_SIDE:
             raise HTTPException(413, f"Image side larger than {MAX_SIDE}px")
-        trace = orch.run_on_array(bgr, source="upload", stem="upload")
+        trace = orch.run_on_array(bgr, source="upload", stem="upload", save_artifact=False)  # uploads stay in memory
     elif body.scene:
         try:
             kind = SceneKind(body.scene)
@@ -156,6 +156,10 @@ def analyze(body: AnalyzeBody) -> dict[str, Any]:
     if trace.annotated_path and Path(trace.annotated_path).exists():
         data = Path(trace.annotated_path).read_bytes()
         annotated_b64 = "data:image/jpeg;base64," + base64.b64encode(data).decode("ascii")
+    elif getattr(trace, "annotated_bgr", None) is not None:
+        ok, enc = cv2.imencode(".jpg", trace.annotated_bgr, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        if ok:
+            annotated_b64 = "data:image/jpeg;base64," + base64.b64encode(enc.tobytes()).decode("ascii")
 
     tdict = trace.to_dict()
     return {

@@ -1,145 +1,100 @@
 # Northbridge Watch
 
-**OpenCV AI Competition 2026 (powered by AWS)** — Agentic Vision path.
+**OpenCV AI Competition 2026 (powered by AWS) · Agentic Vision path**
 
-> Quiet home perception for the fictional **Northbridge** household (**Avery & Morgan**): OpenCV 5 watches porch/kitchen demo scenes, then an agent policy chooses **notify** vs **auto-log** vs **human-required**. Vision evidence changes the next action.
+> A quiet home camera agent for the fictional **Northbridge** household (**Avery & Morgan**). OpenCV 5 looks at porch and kitchen frames. A small, auditable policy then decides whether to do nothing, log quietly, notify someone, or ask a human. What the camera sees changes what happens next.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![OpenCV](https://img.shields.io/badge/OpenCV-5.0-green.svg)](https://opencv.org/)
-[![AWS](https://img.shields.io/badge/AWS-Lambda%20%2B%20S3%20%2B%20API%20GW-orange.svg)](docs/aws-deploy.md)
+[![OpenCV](https://img.shields.io/badge/OpenCV-5.0.0-green.svg)](https://opencv.org/)
 
-**Hackathon:** [opencv26.devpost.com](https://opencv26.devpost.com/) · **Grant form:** [Jotform 262145877145059](https://form.jotform.com/262145877145059)
-
----
-
-## Live demo
-
-**Judge UI (Vercel):** [https://northbridge-watch.vercel.app](https://northbridge-watch.vercel.app)
-
-Static fixture traces ship in `web/public/demo/` so judges can explore without a GPU or webcam. Full OpenCV 5 loop: `./demo.sh`.
+| | |
+|---|---|
+| **Live app** | **<https://northbridge-watch.vercel.app>**: real OpenCV 5 running in a Vercel Python function (`/api/health`, `/api/analyze`). Try the 5 demo scenes or upload your own image. |
+| **Technical report** | [`docs/technical-report.md`](docs/technical-report.md) ([PDF](docs/technical-report.pdf)) |
+| **Architecture** | [`docs/architecture.png`](docs/architecture.png) |
+| **Pitch deck** | [`docs/pitch-deck.pdf`](docs/pitch-deck.pdf) |
+| **Evaluation** | [`docs/eval/results.md`](docs/eval/results.md) · v1 baseline [`docs/eval/baseline-v1/results.md`](docs/eval/baseline-v1/results.md) · failures [`docs/failures/`](docs/failures/) |
+| **Hackathon** | [opencv26.devpost.com](https://opencv26.devpost.com/) |
 
 ---
 
-## Why this fits the brief
-
-| Requirement | Northbridge Watch |
-|-------------|-------------------|
-| OpenCV 5 substantive | HSV/Lab, morphology, contours, Canny, annotated overlays — not a wrapper around a black-box captioner |
-| Meaningful AWS | API Gateway → Lambda (arm64) → S3 event store + SNS alerts ([`aws/template.yaml`](aws/template.yaml)) |
-| Agentic Vision | Perception → PolicyEngine → act (notify / auto-log / escalate). Spill always escalates; calm never notifies |
-| Judgeable offline | `./demo.sh` — no AWS keys |
-| Live web endpoint | Vercel scene explorer with agent traces |
-
----
-
-## Judge quickstart (~60 seconds)
+## One-command demo
 
 ```bash
-git clone https://github.com/dl88jing/northbridge-watch.git
-cd northbridge-watch
-./demo.sh
+git clone https://github.com/dl88jing/northbridge-watch.git && cd northbridge-watch
+make demo     # creates .venv, regenerates fixtures, runs the OpenCV 5 → policy → action loop
+make test     # 26 unit tests (detector, policy, orchestrator, Lambda handler, API)
+make eval     # held-out synthetic evaluation → docs/eval/
 ```
 
-Expected highlights:
+No AWS keys, GPU or webcam needed. `./demo.sh` does the same thing as `make demo` on machines without `make`. To run locally with the UI: `make serve` (API on :8787) and `make web`.
 
 | Scene | Perception | Action |
-|-------|------------|--------|
+|---|---|---|
 | `calm_porch` | none | `noop` |
-| `package_at_door` | package | `notify` or `auto_log` |
-| `busy_porch` | multi-package | `human_required` |
-| `floor_spill` | spill | `human_required` |
-| `empty_fridge` | empty_fridge | `notify` / quiet `auto_log` |
-
-### API + web (local)
-
-```bash
-./demo.sh serve   # http://127.0.0.1:8787/api/health
-./demo.sh web     # Vite UI → proxies /api when configured
-```
+| `package_at_door` | package (0.82) | `notify` (daytime) / `auto_log` (quiet hours) |
+| `busy_porch` | 3 packages | `human_required` |
+| `floor_spill` | spill (0.68) | `human_required` |
+| `empty_fridge` | empty_fridge (0.76) | `notify` / quiet `auto_log` |
 
 ---
 
 ## Architecture
 
-```
-fixture / webcam frame
-        │
-        ▼
- OpenCV 5 AnomalyDetector  ──► DetectionResult (label, conf, bbox)
-        │
-        ▼
- PolicyEngine (quiet hours, severity, multi-object)
-        │
-        ├── noop
-        ├── auto_log  ──► Local JSONL or Lambda→S3
-        ├── notify    ──► SNS / push mock → Avery or Morgan
-        └── human_required ──► escalate + await ack
-        │
-        ▼
- Vercel judge UI (annotated frame + agent trace)
-```
+![Architecture](docs/architecture.png)
 
-Details: [`docs/architecture.md`](docs/architecture.md) · Agent evidence: [`docs/agent-workflow.md`](docs/agent-workflow.md) · AWS: [`docs/aws-deploy.md`](docs/aws-deploy.md)
+- **Perception** ([`detector.py`](northbridge_watch/vision/detector.py)), all classical OpenCV 5.0.0:
+  - `resize` to a fixed working frame
+  - HSV `inRange` masks, `morphologyEx` open/close
+  - `findContours`, `approxPolyDP` rectangularity, `convexHull` solidity (spill irregularity)
+  - `Sobel` tile-grid and shelf evidence on a `normalize`d image, `Canny` edge density
+  - fridge occupancy gate, annotated overlays
+- **Policy** ([`policy.py`](northbridge_watch/agent/policy.py)): deterministic rules for severity, quiet hours, multi-package escalation and the spill safety rule.
+- **Orchestrator** ([`orchestrator.py`](northbridge_watch/agent/orchestrator.py)): writes a trace (perception → decision → actions) and persists the event.
+- **Live API** ([`api/index.py`](api/index.py) → [`server.py`](northbridge_watch/api/server.py)): the same FastAPI app runs locally and as a Vercel Python function. Uploads are processed in memory and never written to disk.
 
----
+## Measured results (held-out synthetic test split)
 
-## OpenCV 5 usage
+| Condition | v1 label acc | **v2 label acc** | Spill recall | Empty-fridge P/R | p50 ms |
+|---|---|---|---|---|---|
+| clean | 0.829 | **0.968** | 0.875 | 1.000 / 0.950 | 2.46 |
+| photometric | 0.807 | **0.921** | 0.700 | 0.971 / 0.850 | 2.36 |
+| half resolution | 0.446 | **0.968** | 0.875 | 1.000 / 0.950 | 2.77 |
+| out-of-domain (coffee spill, white mailer, night) | — | **0.333** | 0.000 | n/a | 2.49 |
 
-Pinned: `opencv-python-headless==5.0.0.93`
+n = 280 in-domain images per condition (7 families × 40) and 120 OOD images, on test seeds that were never used for tuning. **These are synthetic scenes from our own generator, not real photos.** See the [report](docs/technical-report.md) for the protocol, failure cases and limitations.
 
-- **Package-at-door:** HSV brown mask → morph close/open → contours → rectangularity score  
-- **Spill:** HSV saturation + Lab `a` channel → irregular blob solidity  
-- **Empty fridge:** bright interior + low Canny edge density on shelf ROI  
-- **Evidence:** every run stamps `cv2.__version__` and writes an annotated JPEG
+## AWS status (honest)
 
-Implementation: [`northbridge_watch/vision/detector.py`](northbridge_watch/vision/detector.py)
+The SAM stack ([`aws/template.yaml`](aws/template.yaml)) is written and the Lambda handler is unit-tested:
 
----
+- API Gateway `POST /ingest` + `GET /health`
+- Lambda (python3.12, arm64)
+- encrypted private S3 event store
+- SNS alerts for `notify`/`human_required`
 
-## AWS usage
-
-| Piece | Purpose |
-|-------|---------|
-| API Gateway `POST /ingest` | Accept perception/decision payloads |
-| Lambda arm64 | Persist + optional SNS |
-| S3 | Durable events (`events/{id}.json`) |
-| SNS | Quiet alerts for notify / human_required |
-
-Offline parity: `LocalEventStore` uses the **same JSON schema**.  
-Deploy guide: [`docs/aws-deploy.md`](docs/aws-deploy.md)
-
----
+**It is not deployed yet.** Once AWS credentials are available, `make deploy-aws` deploys the stack and sets `NW_AWS_INGEST_URL` as a Vercel env var. The live app then forwards every non-noop decision to S3/SNS and shows the S3 reference. Until then the UI shows "AWS ingest: not deployed yet". Details: [`docs/aws-deploy.md`](docs/aws-deploy.md).
 
 ## Repository layout
 
 ```
-northbridge_watch/     Python package (vision, agent, aws, api)
-aws/                   SAM template + Lambda entry
-docs/                  Architecture, AWS, agent workflow, grant draft
-fixtures/              Generated scenes, annotated frames, events
-scripts/               Fixture generator + CLI demo
-web/                   Vercel judge UI (static demo catalog + API client)
+northbridge_watch/   vision (OpenCV 5), agent (policy, orchestrator), aws (Lambda), api (FastAPI), eval
+api/index.py         Vercel Python function entry
+aws/                 SAM template
+web/                 React UI (Vite)
+docs/                report, architecture, eval results, failure gallery, deck
+scripts/             fixtures, CLI demo, v1 baseline, failure gallery, AWS deploy
+tests/               pytest suite
 ```
-
----
-
-## Cloud compute grant
-
-Proposal draft: [`docs/grant-proposal-draft.md`](docs/grant-proposal-draft.md)  
-**Form:** https://form.jotform.com/262145877145059  
-
-Grant is optional for prize eligibility; still useful for Lambda/Graviton/COOL experiments.
-
----
 
 ## Responsible use
 
-Demo scenes are synthetic. Real deployments must obtain consent for cameras, minimize retention, default to on-device perception, and keep **human_required** for safety hazards (spills). No biometric identification.
-
----
+- Demo scenes are synthetic, and the household is fictional.
+- No people or faces are detected or identified.
+- Spills and ambiguous cases always escalate to a human.
+- This is **not** a safety or security device.
+- For any real deployment: get consent, keep retention to a minimum, and prefer on-device processing.
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
-
-Team: **Northbridge** · Household: **Avery & Morgan**
+Apache-2.0, see [LICENSE](LICENSE). Team **Northbridge** · Household **Avery & Morgan**.

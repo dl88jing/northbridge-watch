@@ -38,7 +38,8 @@ class LocalEventStore:
     """Offline stand-in for S3 + DynamoDB used by the agent loop."""
 
     def __init__(self, root: Path | None = None):
-        self.root = Path(root or os.environ.get("NW_EVENT_DIR", "fixtures/events"))
+        default = "/tmp/nw-events" if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") else "fixtures/events"
+        self.root = Path(root or os.environ.get("NW_EVENT_DIR", default))
         self.root.mkdir(parents=True, exist_ok=True)
         self.events_path = self.root / "events.jsonl"
         self.traces_path = self.root / "traces.jsonl"
@@ -82,6 +83,13 @@ def lambda_handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]
     When AWS credentials + bucket are configured, writes to S3.
     Otherwise falls back to LocalEventStore (safe for demos).
     """
+    path = event.get("path") or event.get("rawPath") or ""
+    method = (event.get("httpMethod") or event.get("requestContext", {}).get("http", {}).get("method") or "").upper()
+    if method == "GET" and path.rstrip("/").endswith("/health"):
+        return _response(200, {
+            "ok": True, "service": "northbridge-watch-ingest",
+            "s3": bool(os.environ.get("NW_S3_BUCKET")), "sns": bool(os.environ.get("NW_SNS_TOPIC_ARN")),
+        })
     try:
         body = event.get("body", event)
         if isinstance(body, str):
@@ -95,8 +103,10 @@ def lambda_handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]
     annotated = body.get("annotated_s3_key") or body.get("annotated_path")
 
     if decision is None:
-        from northbridge_watch.agent.policy import PolicyEngine
-
+        try:
+            from northbridge_watch.agent.policy import PolicyEngine
+        except ImportError:  # slim Lambda bundle ships only this module
+            return _response(400, {"error": "decision is required (policy engine not bundled in this Lambda)"})
         decision = PolicyEngine().decide(perception).to_dict()
 
     payload = build_event_payload(perception, decision, source, annotated)

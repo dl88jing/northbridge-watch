@@ -8,7 +8,7 @@
                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  OpenCV 5 perception (AnomalyDetector)                          │
-│  HSV/Lab · morphology · contours · Canny · annotated overlay    │
+│  HSV · morphology   · contours · Canny · annotated overlay    │
 │  labels: package | spill | empty_fridge | calm                  │
 └──────────────────────────────┬──────────────────────────────────┘
                                │ structured DetectionResult

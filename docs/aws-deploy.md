@@ -1,5 +1,7 @@
 # AWS deployment path
 
+> **Status (2026-10-25): not deployed.** No AWS credentials were available in the build environment. Everything below is ready to run; `make deploy-aws` performs the full deploy + Vercel wiring.
+
 ## Meaningful AWS component (required)
 
 | Service | Role |
@@ -12,6 +14,8 @@
 SAM template: [`aws/template.yaml`](../aws/template.yaml).
 
 ### Deploy (when AWS credentials available)
+
+One command: `make deploy-aws` (runs `scripts/deploy_aws.sh --wire-vercel`). Manual equivalent:
 
 ```bash
 cd aws

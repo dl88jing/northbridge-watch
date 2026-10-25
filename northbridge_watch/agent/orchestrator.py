@@ -49,17 +49,17 @@ class AgentOrchestrator:
         perception = self.detector.analyze_path(path)
         return self._complete(perception, source=source, stem=path.stem)
 
-    def run_on_array(self, bgr, source: str = "webcam", stem: str = "frame") -> AgentTrace:
+    def run_on_array(self, bgr, source: str = "webcam", stem: str = "frame", save_artifact: bool = True) -> AgentTrace:
         perception = self.detector.analyze(bgr)
-        return self._complete(perception, source=source, stem=stem)
+        return self._complete(perception, source=source, stem=stem, save_artifact=save_artifact)
 
-    def _complete(self, perception: DetectionResult, source: str, stem: str) -> AgentTrace:
+    def _complete(self, perception: DetectionResult, source: str, stem: str, save_artifact: bool = True) -> AgentTrace:
         ts = datetime.now(timezone.utc).isoformat()
         det_dict = perception.to_dict()
         decision = self.policy.decide(det_dict)
 
         annotated_path = None
-        if perception.annotated_bgr is not None:
+        if save_artifact and perception.annotated_bgr is not None:
             import cv2
 
             annotated_path = str(self.artifact_dir / f"{stem}_annotated.jpg")
@@ -79,6 +79,7 @@ class AgentOrchestrator:
             annotated_path=annotated_path,
         )
         self.store.append_trace(trace.to_dict())
+        trace.annotated_bgr = perception.annotated_bgr  # in-memory only, not serialised
         return trace
 
     def _execute(
