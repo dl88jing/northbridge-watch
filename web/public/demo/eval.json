@@ -1,0 +1,549 @@
+{
+  "meta": {
+    "generated_utc": "2026-10-25 07:56",
+    "opencv": "5.0.0",
+    "python": "3.13.5",
+    "machine": "Linux x86_64, 8 CPUs",
+    "n_per_family": 40,
+    "seed0": 50000,
+    "split": "test",
+    "policy_clock": "2026-09-15T15:00:00+00:00"
+  },
+  "canonical": [
+    {
+      "scene": "calm_porch",
+      "expected": "none",
+      "pred": "none",
+      "conf": 0.0,
+      "n_det": 0,
+      "action": "noop",
+      "ms_p50": 1.302215499435988
+    },
+    {
+      "scene": "package_at_door",
+      "expected": "package",
+      "pred": "package",
+      "conf": 0.82,
+      "n_det": 1,
+      "action": "notify",
+      "ms_p50": 1.378881000164256
+    },
+    {
+      "scene": "floor_spill",
+      "expected": "spill",
+      "pred": "spill",
+      "conf": 0.679,
+      "n_det": 1,
+      "action": "human_required",
+      "ms_p50": 2.6739405002444983
+    },
+    {
+      "scene": "empty_fridge",
+      "expected": "empty_fridge",
+      "pred": "empty_fridge",
+      "conf": 0.762,
+      "n_det": 1,
+      "action": "notify",
+      "ms_p50": 2.034558499872219
+    },
+    {
+      "scene": "busy_porch",
+      "expected": "package",
+      "pred": "package",
+      "conf": 0.662,
+      "n_det": 3,
+      "action": "human_required",
+      "ms_p50": 1.6257999996014405
+    }
+  ],
+  "in_domain": {
+    "by_condition": {
+      "clean": {
+        "n": 280,
+        "label_accuracy": 0.9678571428571429,
+        "action_accuracy": 0.9642857142857143,
+        "per_label": {
+          "package": {
+            "tp": 78,
+            "fp": 0,
+            "fn": 2,
+            "precision": 1.0,
+            "recall": 0.975,
+            "f1": 0.9873417721518987
+          },
+          "spill": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 5,
+            "precision": 1.0,
+            "recall": 0.875,
+            "f1": 0.9333333333333333
+          },
+          "empty_fridge": {
+            "tp": 38,
+            "fp": 0,
+            "fn": 2,
+            "precision": 1.0,
+            "recall": 0.95,
+            "f1": 0.9743589743589743
+          }
+        },
+        "busy_count_exact": 0.925,
+        "latency_ms_p50": 2.462456000102975,
+        "latency_ms_p95": 3.5719424000944855
+      },
+      "photometric": {
+        "n": 280,
+        "label_accuracy": 0.9214285714285714,
+        "action_accuracy": 0.9142857142857143,
+        "per_label": {
+          "package": {
+            "tp": 77,
+            "fp": 0,
+            "fn": 3,
+            "precision": 1.0,
+            "recall": 0.9625,
+            "f1": 0.980891719745223
+          },
+          "spill": {
+            "tp": 28,
+            "fp": 0,
+            "fn": 12,
+            "precision": 1.0,
+            "recall": 0.7,
+            "f1": 0.8235294117647058
+          },
+          "empty_fridge": {
+            "tp": 34,
+            "fp": 1,
+            "fn": 6,
+            "precision": 0.9714285714285714,
+            "recall": 0.85,
+            "f1": 0.9066666666666667
+          }
+        },
+        "busy_count_exact": 0.85,
+        "latency_ms_p50": 2.360180000323453,
+        "latency_ms_p95": 3.346317000659838
+      },
+      "blur_noise": {
+        "n": 280,
+        "label_accuracy": 0.975,
+        "action_accuracy": 0.975,
+        "per_label": {
+          "package": {
+            "tp": 80,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "spill": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 5,
+            "precision": 1.0,
+            "recall": 0.875,
+            "f1": 0.9333333333333333
+          },
+          "empty_fridge": {
+            "tp": 38,
+            "fp": 0,
+            "fn": 2,
+            "precision": 1.0,
+            "recall": 0.95,
+            "f1": 0.9743589743589743
+          }
+        },
+        "busy_count_exact": 1.0,
+        "latency_ms_p50": 2.0529164999061322,
+        "latency_ms_p95": 3.0380025502381613
+      },
+      "jpeg_q30": {
+        "n": 280,
+        "label_accuracy": 0.9678571428571429,
+        "action_accuracy": 0.9642857142857143,
+        "per_label": {
+          "package": {
+            "tp": 78,
+            "fp": 0,
+            "fn": 2,
+            "precision": 1.0,
+            "recall": 0.975,
+            "f1": 0.9873417721518987
+          },
+          "spill": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 5,
+            "precision": 1.0,
+            "recall": 0.875,
+            "f1": 0.9333333333333333
+          },
+          "empty_fridge": {
+            "tp": 38,
+            "fp": 0,
+            "fn": 2,
+            "precision": 1.0,
+            "recall": 0.95,
+            "f1": 0.9743589743589743
+          }
+        },
+        "busy_count_exact": 0.9,
+        "latency_ms_p50": 2.4930925001172,
+        "latency_ms_p95": 3.6472447501182614
+      },
+      "half_res": {
+        "n": 280,
+        "label_accuracy": 0.9678571428571429,
+        "action_accuracy": 0.9642857142857143,
+        "per_label": {
+          "package": {
+            "tp": 78,
+            "fp": 0,
+            "fn": 2,
+            "precision": 1.0,
+            "recall": 0.975,
+            "f1": 0.9873417721518987
+          },
+          "spill": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 5,
+            "precision": 1.0,
+            "recall": 0.875,
+            "f1": 0.9333333333333333
+          },
+          "empty_fridge": {
+            "tp": 38,
+            "fp": 0,
+            "fn": 2,
+            "precision": 1.0,
+            "recall": 0.95,
+            "f1": 0.9743589743589743
+          }
+        },
+        "busy_count_exact": 0.925,
+        "latency_ms_p50": 2.768552999896201,
+        "latency_ms_p95": 3.901678250576879
+      }
+    },
+    "by_family": {
+      "calm_porch": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "photometric": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "blur_noise": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "jpeg_q30": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "half_res": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        }
+      },
+      "package_at_door": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 0.95,
+          "action_accuracy": 0.95,
+          "confusions": {
+            "none": 2
+          }
+        },
+        "photometric": {
+          "n": 40,
+          "label_accuracy": 0.925,
+          "action_accuracy": 0.9,
+          "confusions": {
+            "none": 3
+          }
+        },
+        "blur_noise": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "jpeg_q30": {
+          "n": 40,
+          "label_accuracy": 0.95,
+          "action_accuracy": 0.95,
+          "confusions": {
+            "none": 2
+          }
+        },
+        "half_res": {
+          "n": 40,
+          "label_accuracy": 0.95,
+          "action_accuracy": 0.95,
+          "confusions": {
+            "none": 2
+          }
+        }
+      },
+      "busy_porch": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 0.975,
+          "confusions": {}
+        },
+        "photometric": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 0.975,
+          "confusions": {}
+        },
+        "blur_noise": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "jpeg_q30": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 0.975,
+          "confusions": {}
+        },
+        "half_res": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 0.975,
+          "confusions": {}
+        }
+      },
+      "floor_spill": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 0.875,
+          "action_accuracy": 0.875,
+          "confusions": {
+            "none": 5
+          }
+        },
+        "photometric": {
+          "n": 40,
+          "label_accuracy": 0.7,
+          "action_accuracy": 0.7,
+          "confusions": {
+            "none": 12
+          }
+        },
+        "blur_noise": {
+          "n": 40,
+          "label_accuracy": 0.875,
+          "action_accuracy": 0.875,
+          "confusions": {
+            "none": 5
+          }
+        },
+        "jpeg_q30": {
+          "n": 40,
+          "label_accuracy": 0.875,
+          "action_accuracy": 0.875,
+          "confusions": {
+            "none": 5
+          }
+        },
+        "half_res": {
+          "n": 40,
+          "label_accuracy": 0.875,
+          "action_accuracy": 0.875,
+          "confusions": {
+            "none": 5
+          }
+        }
+      },
+      "clean_floor": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "photometric": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "blur_noise": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "jpeg_q30": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "half_res": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        }
+      },
+      "empty_fridge": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 0.95,
+          "action_accuracy": 0.95,
+          "confusions": {
+            "none": 2
+          }
+        },
+        "photometric": {
+          "n": 40,
+          "label_accuracy": 0.85,
+          "action_accuracy": 0.85,
+          "confusions": {
+            "none": 6
+          }
+        },
+        "blur_noise": {
+          "n": 40,
+          "label_accuracy": 0.95,
+          "action_accuracy": 0.95,
+          "confusions": {
+            "none": 2
+          }
+        },
+        "jpeg_q30": {
+          "n": 40,
+          "label_accuracy": 0.95,
+          "action_accuracy": 0.95,
+          "confusions": {
+            "none": 2
+          }
+        },
+        "half_res": {
+          "n": 40,
+          "label_accuracy": 0.95,
+          "action_accuracy": 0.95,
+          "confusions": {
+            "none": 2
+          }
+        }
+      },
+      "full_fridge": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "photometric": {
+          "n": 40,
+          "label_accuracy": 0.975,
+          "action_accuracy": 0.975,
+          "confusions": {
+            "empty_fridge": 1
+          }
+        },
+        "blur_noise": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "jpeg_q30": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        },
+        "half_res": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        }
+      }
+    }
+  },
+  "ood": {
+    "by_condition": {
+      "clean": {
+        "n": 120,
+        "label_accuracy": 0.3333333333333333,
+        "action_accuracy": 0.3333333333333333,
+        "per_label": {
+          "package": {
+            "tp": 40,
+            "fp": 0,
+            "fn": 40,
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666
+          },
+          "spill": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 40,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null
+          }
+        },
+        "busy_count_exact": null,
+        "latency_ms_p50": 2.488303500285838,
+        "latency_ms_p95": 3.693453099731414
+      }
+    },
+    "by_family": {
+      "coffee_spill": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 0.0,
+          "action_accuracy": 0.0,
+          "confusions": {
+            "none": 40
+          }
+        }
+      },
+      "white_mailer": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 0.0,
+          "action_accuracy": 0.0,
+          "confusions": {
+            "none": 40
+          }
+        }
+      },
+      "night_porch_package": {
+        "clean": {
+          "n": 40,
+          "label_accuracy": 1.0,
+          "action_accuracy": 1.0,
+          "confusions": {}
+        }
+      }
+    }
+  }
+}

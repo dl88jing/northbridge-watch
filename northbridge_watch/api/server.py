@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import base64
+import json
+import os
+import time
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -17,8 +21,14 @@ from northbridge_watch.aws.handler import LocalEventStore
 from northbridge_watch.vision.scenes import SCENE_SPECS, SceneKind, generate_scene, list_scene_kinds
 
 ROOT = Path(__file__).resolve().parents[2]
-FIXTURES = ROOT / "fixtures" / "scenes"
-ANNOTATED = ROOT / "fixtures" / "annotated"
+# On serverless hosts (Vercel) only /tmp is writable; NW_* env vars redirect artifacts there.
+FIXTURES = Path(os.environ.get("NW_FIXTURE_DIR", ROOT / "fixtures" / "scenes"))
+ANNOTATED = Path(os.environ.get("NW_ARTIFACT_DIR", ROOT / "fixtures" / "annotated"))
+EVENTS = Path(os.environ.get("NW_EVENT_DIR", ROOT / "fixtures" / "events"))
+# Optional: the AWS API Gateway /ingest URL (set as a Vercel env var, never committed).
+AWS_INGEST_URL = os.environ.get("NW_AWS_INGEST_URL", "").strip()
+MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+MAX_SIDE = 4096
 
 app = FastAPI(title="Northbridge Watch", version=__version__)
 app.add_middleware(
@@ -28,8 +38,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-orch = AgentOrchestrator(artifact_dir=ANNOTATED)
-store = LocalEventStore(ROOT / "fixtures" / "events")
+store = LocalEventStore(EVENTS)
+orch = AgentOrchestrator(artifact_dir=ANNOTATED, store=store)
+
+
+def _host() -> str:
+    if os.environ.get("VERCEL"):
+        return "vercel-serverless"
+    if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        return "aws-lambda"
+    return "local"
+
+
+def _forward_to_aws(trace: dict[str, Any]) -> dict[str, Any]:
+    """Send the perception+decision to the AWS ingest Lambda (S3 + SNS) when configured."""
+    if not AWS_INGEST_URL:
+        return {"configured": False}
+    if trace["decision"]["action"] == "noop":
+        return {"configured": True, "sent": False, "reason": "noop: nothing to persist"}
+    body = json.dumps(
+        {"perception": trace["perception"], "decision": trace["decision"], "source": "vercel-ui"}
+    ).encode()
+    req = urllib.request.Request(
+        AWS_INGEST_URL.rstrip("/") + "/ingest",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    t0 = time.perf_counter()
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            out = json.loads(r.read().decode() or "{}")
+        return {
+            "configured": True,
+            "sent": True,
+            "ok": bool(out.get("ok")),
+            "ref": out.get("ref"),
+            "ms": round((time.perf_counter() - t0) * 1000, 1),
+        }
+    except Exception as exc:  # noqa: BLE001 — surface honestly in the UI
+        return {"configured": True, "sent": True, "ok": False, "error": type(exc).__name__}
 
 
 class AnalyzeBody(BaseModel):
@@ -48,6 +96,8 @@ def health() -> dict[str, Any]:
         "household": list(HOUSEHOLD),
         "opencv": _cv.__version__,
         "path": "Agentic Vision",
+        "host": _host(),
+        "aws_ingest": "configured" if AWS_INGEST_URL else "not_configured",
     }
 
 
@@ -71,14 +121,22 @@ def scenes() -> dict[str, Any]:
 
 @app.post("/api/analyze")
 def analyze(body: AnalyzeBody) -> dict[str, Any]:
+    t0 = time.perf_counter()
     if body.image_b64:
         import numpy as np
 
-        raw = base64.b64decode(body.image_b64.split(",")[-1])
+        try:
+            raw = base64.b64decode(body.image_b64.split(",")[-1], validate=False)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(400, "Invalid base64") from exc
+        if len(raw) > MAX_UPLOAD_BYTES:
+            raise HTTPException(413, "Image larger than 4 MB")
         arr = np.frombuffer(raw, dtype=np.uint8)
         bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
         if bgr is None:
             raise HTTPException(400, "Could not decode image")
+        if max(bgr.shape[:2]) > MAX_SIDE:
+            raise HTTPException(413, f"Image side larger than {MAX_SIDE}px")
         trace = orch.run_on_array(bgr, source="upload", stem="upload")
     elif body.scene:
         try:
@@ -93,12 +151,19 @@ def analyze(body: AnalyzeBody) -> dict[str, Any]:
     else:
         raise HTTPException(400, "Provide scene or image_b64")
 
+    elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
     annotated_b64 = None
     if trace.annotated_path and Path(trace.annotated_path).exists():
         data = Path(trace.annotated_path).read_bytes()
         annotated_b64 = "data:image/jpeg;base64," + base64.b64encode(data).decode("ascii")
 
-    return {"trace": trace.to_dict(), "annotated_b64": annotated_b64}
+    tdict = trace.to_dict()
+    return {
+        "trace": tdict,
+        "annotated_b64": annotated_b64,
+        "server": {"host": _host(), "opencv": cv2.__version__, "pipeline_ms": elapsed_ms},
+        "aws": _forward_to_aws(tdict),
+    }
 
 
 @app.get("/api/traces")

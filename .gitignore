@@ -19,3 +19,5 @@ fixtures/events/*.jsonl
 *.log
 .aws-sam/
 __pycache__/
+.vercel
+.env*.local

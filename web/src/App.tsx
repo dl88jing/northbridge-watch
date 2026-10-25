@@ -29,6 +29,20 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [health, setHealth] = useState<any>(null);
+  const [evalRes, setEvalRes] = useState<any>(null);
+  const [upload, setUpload] = useState<{ name: string; src: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/health")
+      .then((r) => (r.ok && (r.headers.get("content-type") || "").includes("json") ? r.json() : null))
+      .then(setHealth)
+      .catch(() => setHealth(null));
+    fetch("/demo/eval.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setEvalRes)
+      .catch(() => setEvalRes(null));
+  }, []);
 
   useEffect(() => {
     fetch("/demo/catalog.json")
@@ -52,19 +66,21 @@ export default function App() {
   const perception = live?.trace?.perception || entry?.trace?.perception;
   const actions = live?.trace?.actions_taken || entry?.trace?.actions_taken || [];
   const annotatedSrc = live?.annotated_b64 || entry?.annotated || null;
-  const sourceSrc = entry?.image;
+  const sourceSrc = upload?.src || entry?.image;
 
-  async function runLive() {
-    if (!entry || busy) return;
+  async function callApi(payload: any) {
     setBusy(true);
     setError(null);
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scene: entry.id }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Live API unavailable — showing baked fixture trace");
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(`Live API error ${res.status}: ${msg.slice(0, 160)}`);
+      }
       const data = await res.json();
       setLive(data);
     } catch (e: any) {
@@ -75,9 +91,35 @@ export default function App() {
     }
   }
 
+  async function runLive() {
+    if (!entry || busy) return;
+    setUpload(null);
+    await callApi({ scene: entry.id });
+  }
+
+  function onFile(ev: React.ChangeEvent<HTMLInputElement>) {
+    const f = ev.target.files?.[0];
+    if (!f) return;
+    if (f.size > 3.5 * 1024 * 1024) {
+      setError("Please use an image under 3.5 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = String(reader.result);
+      setUpload({ name: f.name, src });
+      callApi({ image_b64: src });
+    };
+    reader.readAsDataURL(f);
+  }
+
   useEffect(() => {
     setLive(null);
+    setUpload(null);
   }, [selected]);
+
+  const apiUp = !!health?.ok;
+  const test = evalRes?.in_domain?.by_condition;
 
   return (
     <div className="app">
@@ -91,8 +133,12 @@ export default function App() {
           </p>
         </div>
         <div className="badges">
-          <span className="badge">OpenCV 5</span>
-          <span className="badge">AWS Lambda · S3 · SNS</span>
+          <span className={`badge ${apiUp ? "ok" : "warn"}`}>
+            {apiUp ? `Live API · OpenCV ${health.opencv} · ${health.host}` : "Live API offline — fixture traces only"}
+          </span>
+          <span className={`badge ${health?.aws_ingest === "configured" ? "ok" : "warn"}`}>
+            {health?.aws_ingest === "configured" ? "AWS ingest connected" : "AWS ingest: not deployed yet"}
+          </span>
           <span className="badge">Team Northbridge</span>
         </div>
       </header>
@@ -114,11 +160,17 @@ export default function App() {
           </div>
           <div className="actions">
             <button className="primary" disabled={busy || !entry} onClick={runLive}>
-              {busy ? "Running…" : "Re-run live OpenCV API"}
+              {busy ? "Running…" : "Run live OpenCV 5 pipeline"}
             </button>
+            <label className="upload-btn">
+              Upload your own image
+              <input type="file" accept="image/jpeg,image/png" onChange={onFile} hidden />
+            </label>
           </div>
           <p className="muted" style={{ marginTop: 10 }}>
-            Live API needs <code>./demo.sh serve</code>. Vercel uses precomputed traces.
+            The button runs the real detector + policy in a serverless function. Uploads are processed
+            in memory and not stored. The detector is tuned for these synthetic scenes; real photos will
+            often come back "calm" (see Limitations in the report).
           </p>
         </aside>
 
@@ -128,8 +180,13 @@ export default function App() {
             <>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div>
-                  <h2>{entry.title}</h2>
-                  <p className="muted">{entry.description}</p>
+                  <h2>{upload ? `Upload: ${upload.name}` : entry.title}</h2>
+                  <p className="muted">
+                    {upload ? "Your image, analysed live." : entry.description}{" "}
+                    {live?.server
+                      ? `· Live result from ${live.server.host} in ${live.server.pipeline_ms} ms`
+                      : "· Precomputed fixture trace"}
+                  </p>
                 </div>
                 {decision && (
                   <span className={`action-pill ${decision.action}`}>
@@ -170,6 +227,20 @@ export default function App() {
                   <div className="k">Speakable</div>
                   <div>{decision?.speakable_brief}</div>
                 </div>
+                {live?.aws && (
+                  <div className="trace-row">
+                    <div className="k">AWS</div>
+                    <div>
+                      {!live.aws.configured
+                        ? "AWS ingest not connected (no endpoint configured) — event kept in the function's local log only."
+                        : live.aws.sent
+                        ? live.aws.ok
+                          ? `Sent to AWS Lambda → ${live.aws.ref} (${live.aws.ms} ms)`
+                          : `AWS ingest failed: ${live.aws.error || "error"}`
+                        : `Not sent (${live.aws.reason})`}
+                    </div>
+                  </div>
+                )}
                 <div className="trace-row">
                   <div className="k">Actions</div>
                   <div>
@@ -182,6 +253,40 @@ export default function App() {
           {error && <p className="muted">{error}</p>}
         </main>
       </div>
+
+      {test && (
+        <section className="panel results">
+          <h2>Measured results (held-out synthetic test split)</h2>
+          <p className="muted">
+            {evalRes.meta.n_per_family} randomized images per scene family per condition, 7 families, OpenCV{" "}
+            {evalRes.meta.opencv}. Synthetic data only, so treat these as a sanity check, not real-world accuracy.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Condition</th><th>N</th><th>Label acc.</th><th>Action acc.</th><th>Spill recall</th><th>p50 ms</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(test).map(([k, m]: any) => (
+                <tr key={k}>
+                  <td>{k}</td>
+                  <td>{m.n}</td>
+                  <td>{(m.label_accuracy * 100).toFixed(1)}%</td>
+                  <td>{(m.action_accuracy * 100).toFixed(1)}%</td>
+                  <td>{m.per_label.spill ? (m.per_label.spill.recall * 100).toFixed(1) + "%" : "n/a"}</td>
+                  <td>{m.latency_ms_p50.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="muted">
+            Known failures: coffee-coloured spills and white mailers are missed (0/40 each). Full method and
+            numbers:{" "}
+            <a href="https://github.com/dl88jing/northbridge-watch/blob/main/docs/technical-report.md">technical report</a>.
+          </p>
+        </section>
+      )}
 
       <footer className="footer">
         Northbridge Watch · Apache-2.0 · Pseudonymous household Avery &amp; Morgan ·
