@@ -7,6 +7,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Iterable
 
+import zlib
+
 import cv2
 import numpy as np
 
@@ -125,7 +127,8 @@ def _draw_fridge(img: np.ndarray, empty: bool = True) -> np.ndarray:
 
 
 def generate_scene(kind: SceneKind, seed: int = 7) -> np.ndarray:
-    rng = np.random.default_rng(seed + hash(kind.value) % 1000)
+    # zlib.crc32 is stable across processes (built-in hash() is salted per run)
+    rng = np.random.default_rng(seed + zlib.crc32(kind.value.encode()) % 1000)
     if kind == SceneKind.CALM_PORCH:
         img = _draw_porch_base()
     elif kind == SceneKind.PACKAGE_AT_DOOR:

@@ -7,8 +7,8 @@
     "image": "/demo/calm_porch.jpg",
     "annotated": "/demo/calm_porch_annotated.jpg",
     "trace": {
-      "trace_id": "8a65095553bca49e",
-      "timestamp": "2026-09-15T04:49:03.966793+00:00",
+      "trace_id": "ba133b7352b2a4e4",
+      "timestamp": "2026-10-25T08:00:09.923864+00:00",
       "source": "fixture",
       "perception": {
         "scene_hint": "calm",
@@ -21,7 +21,11 @@
           "fridge_like": false,
           "border_mean": 188.0,
           "center_mean": 141.9,
-          "grid_score": 0.032
+          "grid_score": 0.035,
+          "input_size": [
+            640,
+            480
+          ]
         },
         "primary": null
       },
@@ -51,8 +55,8 @@
     "image": "/demo/package_at_door.jpg",
     "annotated": "/demo/package_at_door_annotated.jpg",
     "trace": {
-      "trace_id": "1a2b0b135039584d",
-      "timestamp": "2026-09-15T04:49:03.973179+00:00",
+      "trace_id": "45b72e93963f909e",
+      "timestamp": "2026-10-25T08:00:09.929333+00:00",
       "source": "fixture",
       "perception": {
         "scene_hint": "porch_package",
@@ -67,7 +71,7 @@
               144,
               94
             ],
-            "area": 13070.0,
+            "area": 13070.5,
             "notes": "approx_vertices=4 aspect=1.53"
           }
         ],
@@ -80,7 +84,11 @@
           "fridge_like": false,
           "border_mean": 188.0,
           "center_mean": 144.2,
-          "grid_score": 0.038
+          "grid_score": 0.04,
+          "input_size": [
+            640,
+            480
+          ]
         },
         "primary": {
           "label": "package",
@@ -91,7 +99,7 @@
             144,
             94
           ],
-          "area": 13070.0,
+          "area": 13070.5,
           "notes": "approx_vertices=4 aspect=1.53"
         }
       },
@@ -109,7 +117,7 @@
       "actions_taken": [
         {
           "type": "persist_event",
-          "ref": "local://events.jsonl#73ce228a-5a32-4f3f-bb93-3ee5ee91e20a",
+          "ref": "local://events.jsonl#04a08544-a132-452f-b3f1-77977b348d70",
           "backend": "local-jsonl"
         },
         {
@@ -130,8 +138,8 @@
     "image": "/demo/floor_spill.jpg",
     "annotated": "/demo/floor_spill_annotated.jpg",
     "trace": {
-      "trace_id": "9531bf65efa130a1",
-      "timestamp": "2026-09-15T04:49:03.980454+00:00",
+      "trace_id": "5c1a7f97401cf27a",
+      "timestamp": "2026-10-25T08:00:09.935875+00:00",
       "source": "fixture",
       "perception": {
         "scene_hint": "floor_spill",
@@ -139,45 +147,49 @@
         "detections": [
           {
             "label": "spill",
-            "confidence": 0.681,
+            "confidence": 0.68,
             "bbox": [
-              160,
+              161,
               190,
-              200,
+              199,
               151
             ],
-            "area": 19743.5,
+            "area": 19741.0,
             "notes": "solidity=0.99"
           }
         ],
         "metrics": {
           "n_detections": 1,
-          "max_confidence": 0.681,
+          "max_confidence": 0.68,
           "opencv": "5.0.0",
           "porch_like": false,
           "floor_like": true,
           "fridge_like": false,
           "border_mean": 224.5,
           "center_mean": 215.9,
-          "grid_score": 0.095
+          "grid_score": 0.185,
+          "input_size": [
+            640,
+            480
+          ]
         },
         "primary": {
           "label": "spill",
-          "confidence": 0.681,
+          "confidence": 0.68,
           "bbox": [
-            160,
+            161,
             190,
-            200,
+            199,
             151
           ],
-          "area": 19743.5,
+          "area": 19741.0,
           "notes": "solidity=0.99"
         }
       },
       "decision": {
         "action": "human_required",
         "reason": "Spill detected (conf=0.68) \u2014 safety hazard.",
-        "severity": 0.8310000000000001,
+        "severity": 0.8300000000000001,
         "notify_targets": [
           "Avery",
           "Morgan"
@@ -189,7 +201,7 @@
       "actions_taken": [
         {
           "type": "persist_event",
-          "ref": "local://events.jsonl#c4eb485e-49b3-4219-9f44-67fdf3d51e0a",
+          "ref": "local://events.jsonl#8af1be91-6d60-40a2-84a8-b89b19258e9c",
           "backend": "local-jsonl"
         },
         {
@@ -217,8 +229,8 @@
     "image": "/demo/empty_fridge.jpg",
     "annotated": "/demo/empty_fridge_annotated.jpg",
     "trace": {
-      "trace_id": "0cd4d6a07d619790",
-      "timestamp": "2026-09-15T04:49:03.986682+00:00",
+      "trace_id": "e96b4f8b18542e49",
+      "timestamp": "2026-10-25T08:00:09.942157+00:00",
       "source": "fixture",
       "perception": {
         "scene_hint": "empty_fridge",
@@ -234,7 +246,7 @@
               336
             ],
             "area": 157248.0,
-            "notes": "mean_bright=236.3 edge_density=0.0194 shelf=0.037"
+            "notes": "occupancy=0.016 mean_bright=236.3 edge_density=0.0194 shelf=0.037"
           }
         ],
         "metrics": {
@@ -246,7 +258,11 @@
           "fridge_like": true,
           "border_mean": 24.5,
           "center_mean": 236.2,
-          "grid_score": 0.04
+          "grid_score": 0.04,
+          "input_size": [
+            640,
+            480
+          ]
         },
         "primary": {
           "label": "empty_fridge",
@@ -258,7 +274,7 @@
             336
           ],
           "area": 157248.0,
-          "notes": "mean_bright=236.3 edge_density=0.0194 shelf=0.037"
+          "notes": "occupancy=0.016 mean_bright=236.3 edge_density=0.0194 shelf=0.037"
         }
       },
       "decision": {
@@ -275,7 +291,7 @@
       "actions_taken": [
         {
           "type": "persist_event",
-          "ref": "local://events.jsonl#71857c21-8390-4460-9388-309b8e697105",
+          "ref": "local://events.jsonl#2747440d-1b7a-4ddf-8ea4-bffaac563342",
           "backend": "local-jsonl"
         },
         {
@@ -296,8 +312,8 @@
     "image": "/demo/busy_porch.jpg",
     "annotated": "/demo/busy_porch_annotated.jpg",
     "trace": {
-      "trace_id": "80e8c293104f69fa",
-      "timestamp": "2026-09-15T04:49:03.992276+00:00",
+      "trace_id": "27a8dbcb9cbef263",
+      "timestamp": "2026-10-25T08:00:09.947436+00:00",
       "source": "fixture",
       "perception": {
         "scene_hint": "porch_package",
@@ -305,27 +321,27 @@
         "detections": [
           {
             "label": "package",
-            "confidence": 0.663,
+            "confidence": 0.662,
             "bbox": [
               408,
               354,
-              100,
+              99,
               68
             ],
-            "area": 6502.0,
-            "notes": "approx_vertices=4 aspect=1.47|merged"
+            "area": 6500.0,
+            "notes": "approx_vertices=4 aspect=1.46|merged"
           },
           {
             "label": "package",
             "confidence": 0.643,
             "bbox": [
               148,
-              358,
+              359,
               94,
-              64
+              63
             ],
-            "area": 5707.0,
-            "notes": "approx_vertices=4 aspect=1.47|merged"
+            "area": 5704.0,
+            "notes": "approx_vertices=4 aspect=1.49|merged"
           },
           {
             "label": "package",
@@ -334,34 +350,38 @@
               278,
               284,
               90,
-              58
+              59
             ],
-            "area": 4964.0,
-            "notes": "approx_vertices=4 aspect=1.55|merged"
+            "area": 4968.0,
+            "notes": "approx_vertices=4 aspect=1.53|merged"
           }
         ],
         "metrics": {
           "n_detections": 3,
-          "max_confidence": 0.663,
+          "max_confidence": 0.662,
           "opencv": "5.0.0",
           "porch_like": true,
           "floor_like": false,
           "fridge_like": false,
           "border_mean": 188.0,
           "center_mean": 140.0,
-          "grid_score": 0.047
+          "grid_score": 0.049,
+          "input_size": [
+            640,
+            480
+          ]
         },
         "primary": {
           "label": "package",
-          "confidence": 0.663,
+          "confidence": 0.662,
           "bbox": [
             408,
             354,
-            100,
+            99,
             68
           ],
-          "area": 6502.0,
-          "notes": "approx_vertices=4 aspect=1.47|merged"
+          "area": 6500.0,
+          "notes": "approx_vertices=4 aspect=1.46|merged"
         }
       },
       "decision": {
@@ -379,7 +399,7 @@
       "actions_taken": [
         {
           "type": "persist_event",
-          "ref": "local://events.jsonl#ddeb14bd-bccc-40d8-b6df-b5012dd91b4f",
+          "ref": "local://events.jsonl#daa0b53e-6a1c-48f6-be19-52853c16ebad",
           "backend": "local-jsonl"
         },
         {

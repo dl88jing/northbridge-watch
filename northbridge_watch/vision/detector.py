@@ -44,7 +44,13 @@ class DetectionResult:
 
 
 class AnomalyDetector:
-    def __init__(self, min_package_area: int = 2000, min_spill_area: int = 5000):
+    def __init__(
+        self,
+        min_package_area: int = 2000,
+        min_spill_area: int = 5000,
+        max_fridge_occupancy: float = 0.04,
+    ):
+        self.max_fridge_occupancy = max_fridge_occupancy
         self.min_package_area = min_package_area
         self.min_spill_area = min_spill_area
         self.opencv_version = cv2.__version__
@@ -55,8 +61,16 @@ class AnomalyDetector:
             raise FileNotFoundError(f"Cannot read image: {path}")
         return self.analyze(img)
 
+    WORK_SIZE = (640, 480)  # (w, h) — ROIs below are defined in this working frame
+
     def analyze(self, bgr: np.ndarray) -> DetectionResult:
+        in_h, in_w = bgr.shape[:2]
+        if (in_w, in_h) != self.WORK_SIZE:
+            # v2: normalise resolution so pixel-space ROIs/areas are valid for any input size.
+            interp = cv2.INTER_AREA if in_w > self.WORK_SIZE[0] else cv2.INTER_LINEAR
+            bgr = cv2.resize(bgr, self.WORK_SIZE, interpolation=interp)
         context = self._scene_context(bgr)
+        context["input_size"] = [in_w, in_h]
         packages = self._detect_packages(bgr) if context["porch_like"] else []
         spills = self._detect_spills(bgr) if context["floor_like"] else []
         fridge = self._detect_empty_fridge(bgr) if context["fridge_like"] else []
@@ -109,11 +123,17 @@ class AnomalyDetector:
             )
             mat_green = float(np.mean(greenish)) > 0.15
         porch_like = bool(door_dark or mat_green)
-        horizontal = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
-        vertical = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+        # v2: grid (tile) evidence on a min-max stretched image so it is exposure invariant.
+        stretched = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+        horizontal = cv2.Sobel(stretched, cv2.CV_32F, 0, 1, ksize=3)
+        vertical = cv2.Sobel(stretched, cv2.CV_32F, 1, 0, ksize=3)
         grid_score = float(np.mean(np.abs(horizontal) > 40) + np.mean(np.abs(vertical) > 40))
-        floor_like = (not porch_like) and center_mean > 180 and grid_score > 0.08 and border_mean > 150
-        fridge_like = border_mean < 80 and center_mean > 180 and not porch_like
+        fridge_like = border_mean < 80 and center_mean > 160 and not porch_like
+        # v2: relative brightness test (bright floor vs. dark surround) instead of absolute 180/150.
+        floor_like = (
+            (not porch_like) and (not fridge_like) and border_mean > 110 and center_mean > 110
+            and grid_score > 0.06
+        )
         return {
             "porch_like": porch_like,
             "floor_like": bool(floor_like),
@@ -251,6 +271,16 @@ class AnomalyDetector:
         mean_bright = float(np.mean(center))
         if mean_bright < 170:
             return []
+        # v2: occupancy = share of interior pixels that are coloured or dark (items), after a
+        # morphological open so sensor noise / thin shelf edges do not count.
+        hsv = cv2.cvtColor(
+            bgr[int(h * 0.15) : int(h * 0.85), int(w * 0.12) : int(w * 0.85)], cv2.COLOR_BGR2HSV
+        )
+        items = ((hsv[:, :, 1] > 60) | (hsv[:, :, 2] < 150)).astype(np.uint8)
+        items = cv2.morphologyEx(items, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+        occupancy = float(items.mean())
+        if occupancy > self.max_fridge_occupancy:
+            return []
         edges = cv2.Canny(center, 60, 150)
         horizontal = cv2.Sobel(center, cv2.CV_32F, 0, 1, ksize=3)
         shelf_score = float(np.mean(np.abs(horizontal) > 50))
@@ -269,7 +299,7 @@ class AnomalyDetector:
                 confidence=round(conf, 3),
                 bbox=(int(w * 0.12), int(h * 0.15), int(w * 0.73), int(h * 0.7)),
                 area=float(center.size),
-                notes=f"mean_bright={mean_bright:.1f} edge_density={edge_density:.4f} shelf={shelf_score:.3f}",
+                notes=f"occupancy={occupancy:.3f} mean_bright={mean_bright:.1f} edge_density={edge_density:.4f} shelf={shelf_score:.3f}",
             )
         ]
 
