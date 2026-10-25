@@ -1,4 +1,4 @@
-.PHONY: setup demo test eval baseline failures serve web deploy-web deploy-aws
+.PHONY: setup demo test eval baseline failures serve web deploy-web deploy-aws deck
 
 setup:
 	@test -d .venv || (python3 -m venv .venv && .venv/bin/pip install -q -U pip && .venv/bin/pip install -q -r requirements.txt pytest httpx && .venv/bin/pip install -q -e .)
@@ -29,3 +29,6 @@ deploy-web:
 
 deploy-aws:          ## needs AWS credentials + SAM CLI
 	./scripts/deploy_aws.sh --wire-vercel
+
+deck:                ## rebuild docs/pitch-deck.pdf from docs/deck/pitch-deck.html
+	scripts/build_deck_pdf.sh
