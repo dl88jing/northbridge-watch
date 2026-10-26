@@ -6,6 +6,8 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![OpenCV](https://img.shields.io/badge/OpenCV-5.0.0-green.svg)](https://opencv.org/)
+[![CI](https://github.com/dl88jing/northbridge-watch/actions/workflows/ci.yml/badge.svg)](https://github.com/dl88jing/northbridge-watch/actions/workflows/ci.yml)
+[![AWS](https://img.shields.io/badge/AWS-deploy--ready%2C_not_deployed-orange.svg)](docs/aws-deploy.md)
 
 | | |
 |---|---|
@@ -23,11 +25,11 @@
 ```bash
 git clone https://github.com/dl88jing/northbridge-watch.git && cd northbridge-watch
 make demo     # creates .venv, regenerates fixtures, runs the OpenCV 5 → policy → action loop
-make test     # 26 unit tests (detector, policy, orchestrator, Lambda handler, API)
+make test     # 42 pytest tests (detector, policy, orchestrator, Lambda handler, API contracts, AWS-honesty, eval regression)
 make eval     # held-out synthetic evaluation → docs/eval/
 ```
 
-No AWS keys, GPU or webcam needed. `./demo.sh` does the same thing as `make demo` on machines without `make`. To run locally with the UI: `make serve` (API on :8787) and `make web`.
+No AWS keys, GPU or webcam needed. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs the full test suite and `./demo.sh demo` on Python 3.11/3.12 and builds the web UI on every push. `./demo.sh` does the same thing as `make demo` on machines without `make`. To run locally with the UI: `make serve` (API on :8787) and `make web`.
 
 | Scene | Perception | Action |
 |---|---|---|
@@ -73,7 +75,7 @@ The SAM stack ([`aws/template.yaml`](aws/template.yaml)) is written and the Lamb
 - encrypted private S3 event store
 - SNS alerts for `notify`/`human_required`
 
-**It is not deployed yet.** Once AWS credentials are available, `make deploy-aws` deploys the stack and sets `NW_AWS_INGEST_URL` as a Vercel env var. The live app then forwards every non-noop decision to S3/SNS and shows the S3 reference. Until then the UI shows "AWS ingest: not deployed yet". Details: [`docs/aws-deploy.md`](docs/aws-deploy.md).
+**It is not deployed yet.** Once AWS credentials are available, `make deploy-aws` deploys the stack and sets `NW_AWS_INGEST_URL` as a Vercel env var. The live app then forwards every non-noop decision to S3/SNS and shows the S3 reference. Until then the live UI is an OpenCV 5 viewer with the AWS step labelled "AWS: deploy-ready, not deployed", and decisions are only kept in the function's temporary local log. Details: [`docs/aws-deploy.md`](docs/aws-deploy.md).
 
 ## Repository layout
 

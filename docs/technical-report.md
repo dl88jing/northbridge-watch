@@ -143,7 +143,7 @@ The night-time package OOD family was detected 40/40.
 ```bash
 git clone https://github.com/dl88jing/northbridge-watch && cd northbridge-watch
 make demo       # OpenCV 5 agent loop on 5 fixtures
-make test       # 25 unit tests
+make test       # 42 pytest tests (also run by GitHub Actions CI on every push)
 make eval       # held-out evaluation -> docs/eval/
 make baseline   # v1 comparison -> docs/eval/baseline-v1/
 make failures   # failure gallery -> docs/failures/

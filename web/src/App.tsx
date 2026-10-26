@@ -136,8 +136,16 @@ export default function App() {
           <span className={`badge ${apiUp ? "ok" : "warn"}`}>
             {apiUp ? `Live API · OpenCV ${health.opencv} · ${health.host}` : "Live API offline — fixture traces only"}
           </span>
-          <span className={`badge ${health?.aws_ingest === "configured" ? "ok" : "warn"}`}>
-            {health?.aws_ingest === "configured" ? "AWS ingest connected" : "AWS ingest: not deployed yet"}
+          <span
+            className={`badge ${health?.aws_ingest === "configured" ? "ok" : "warn"}`}
+            role="status"
+            title={
+              health?.aws_ingest === "configured"
+                ? "Non-noop decisions are forwarded to the AWS ingest Lambda (S3 + SNS)."
+                : "The AWS SAM stack (API Gateway + Lambda + S3 + SNS) is written and unit-tested but not deployed. This page runs OpenCV 5 on Vercel only; nothing is sent to AWS."
+            }
+          >
+            {health?.aws_ingest === "configured" ? "AWS ingest connected" : "AWS: deploy-ready, not deployed"}
           </span>
           <span className="badge">Team Northbridge</span>
         </div>
@@ -232,7 +240,7 @@ export default function App() {
                     <div className="k">AWS</div>
                     <div>
                       {!live.aws.configured
-                        ? "AWS ingest not connected (no endpoint configured) — event kept in the function's local log only."
+                        ? "AWS not deployed yet (SAM stack is deploy-ready) — nothing was sent to AWS; event kept in the function's temporary local log only."
                         : live.aws.sent
                         ? live.aws.ok
                           ? `Sent to AWS Lambda → ${live.aws.ref} (${live.aws.ms} ms)`
